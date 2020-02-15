@@ -11,6 +11,6 @@ setup(
     description=u'debug tool',
     packages=find_packages(),
     install_requires=[
-        opencv-python
+        "opencv-python",
     ]
 )
