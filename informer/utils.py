@@ -11,3 +11,10 @@ def encode_cmd(v, w, c):
     data = {'v':v, 'w':w, 'c':c}
     data = json.dumps(data).encode()
     return data
+
+def to_json(**kwargs):
+    return json.dumps(kwargs)
+    
+def encode_debug_message(*args):
+    data = json.dumps(args).encode()
+    return data
