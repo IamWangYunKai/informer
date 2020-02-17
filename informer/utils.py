@@ -15,6 +15,6 @@ def encode_cmd(v, w, c):
 def to_json(**kwargs):
     return json.dumps(kwargs)
     
-def encode_debug_message(*args):
-    data = json.dumps(args).encode()
+def encode_debug_message(messages):
+    data = json.dumps(messages).encode()
     return data

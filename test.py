@@ -1,20 +1,13 @@
-from informer import Informer
+from informer import Informer, config
 from time import sleep
 import random
 
 if __name__ == '__main__':
     ifm = Informer()
-    #ifm.draw_box(500, 300, 200, 80, "person", 'blue')
-    #ifm.draw_center_box(500, 300, 200, 80, "person")
-    #ifm.draw_line(0,0, 100, 100)
     while True:
-        #ifm.clear()
-        #sleep(0.01)
-        if random.random() > 0.5 :
-            ifm.draw_box(500, 300, 200, 80, "person", 'blue')
-            ifm.draw_box(300, 400, 50, 50, "cat", 'red')
-            #ifm.draw_center_box(300, 400, 100, 180, "person", 'blue')
-        else:
-            ifm.draw_box(300, 400, 50, 50, "cat", 'red')
+        for _ in range(random.randint(50, 150)):
+            ifm.draw_box(random.randint(0, 1200), random.randint(0, 1200), random.randint(10, 200), random.randint(10, 200), random.sample(config.colors, 1)[0], random.sample(config.colors, 1)[0])
+            ifm.draw_center_box(random.randint(0, 1200), random.randint(0, 1200), random.randint(100, 400), random.randint(10, 200), random.sample(config.colors, 1)[0], random.sample(config.colors, 1)[0])
+            ifm.draw_line(random.randint(0, 1200), random.randint(0, 1200), random.randint(0, 1200), random.randint(0, 1200), random.sample(config.colors, 1)[0])
         ifm.draw()
-        sleep(0.5)
+        #sleep(0.1)

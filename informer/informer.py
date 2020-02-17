@@ -9,7 +9,7 @@ class Informer():
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
         self.cnt = 0
-        self.message_dick = {'cnt':0}
+        self.message_dick = {}
         
     
     def send_vision(self, img, debug=False):
@@ -22,36 +22,34 @@ class Informer():
         
     def draw_box(self, lt_x, lt_y, width, height, message='', color='red', **kwargs):
         data = to_json(dtype='box',
-                                    lt_x=lt_x, lt_y=lt_y, width=width, height=height,
-                                    message=message,
-                                    color=color)
+                       lt_x=lt_x, lt_y=lt_y, width=width, height=height,
+                       message=message,
+                       color=color)
         self.message_dick[str(self.cnt)] = data
         self.cnt += 1
-        self.message_dick['cnt'] = self.cnt
-        #send_simple_package(data, self.socket, config.ADDRESS, config.DEBUG_PORT)
         
     def draw_center_box(self, ct_x, ct_y, width, height, message='', color='red'):
-        data = encode_debug_message(dtype='center_box',
-                                    ct_x=ct_x, ct_y=ct_y, width=width, height=height,
-                                    message=message,
-                                    color=color)
-        send_simple_package(data, self.socket, config.ADDRESS, config.DEBUG_PORT)
+        data = to_json(dtype='center_box',
+                       ct_x=ct_x, ct_y=ct_y, width=width, height=height,
+                       message=message,
+                       color=color)
+        self.message_dick[str(self.cnt)] = data
+        self.cnt += 1
         
     def draw_line(self, s_x, s_y, e_x, e_y, color='red'):
-        data = encode_debug_message(dtype='line',
-                                    s_x=s_x, s_y=s_y, e_x=e_x, e_y=e_y,
-                                    color=color)
-        send_simple_package(data, self.socket, config.ADDRESS, config.DEBUG_PORT)
+        data = to_json(dtype='line',
+                       s_x=s_x, s_y=s_y, e_x=e_x, e_y=e_y,
+                       color=color)
+        self.message_dick[str(self.cnt)] = data
+        self.cnt += 1
         
     def clear(self):
-        data = encode_debug_message(dtype='clear')
-        send_simple_package(data, self.socket, config.ADDRESS, config.DEBUG_PORT)
+        data = to_json(dtype='clear')
+        self.message_dick[str(self.cnt)] = data
+        self.cnt += 1
         
     def draw(self):
-        #print(self.message_dick)
         data = encode_debug_message(self.message_dick)
-        #print(data)
-        self.message_dick = {'cnt':0}
+        self.message_dick = {}
         self.cnt = 0
-        #data = encode_debug_message(dtype='draw')
-        #send_simple_package(data, self.socket, config.ADDRESS, config.DEBUG_PORT)
+        send_simple_package(data, self.socket, config.ADDRESS, config.DEBUG_PORT)
