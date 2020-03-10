@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import socket
 import struct
 import threading
@@ -11,21 +12,32 @@ class Informer():
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
         
-        server_address = ('', config.SYNC_RECEIVE_PORT)
-        self.receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.receive_socket.bind(server_address)
         # tell the operating system to add the socket to the multicast group on all interfaces.
         group = socket.inet_aton(config.ADDRESS)
         mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-        self.receive_socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        
+        server_address = ('', config.SYNC_RECEIVE_PORT)
+        self.sync_rec_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sync_rec_socket.bind(server_address)
+        self.sync_rec_socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         self.cloc_sync_thread = threading.Thread(
             target=self.cloc_sync, args=()
         )
         
+        server_address = ('', config.CMD_RECEIVE_PORT)
+        self.cmd_rec_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.cmd_rec_socket.bind(server_address)
+        self.cmd_rec_socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self.cmd_rec_thread = threading.Thread(
+            target=self.cmd_rec, args=()
+        )
+        
         self.cnt = 0
         self.message_dick = {}
+        
         # automaticly start cloc synchronization thread
         self.cloc_sync_thread.start()
+        self.cmd_rec_thread.start()
     
     def send_vision(self, img, debug=False):
         data = encode_img(img)
@@ -33,7 +45,7 @@ class Informer():
     
     def send_cmd(self, v, w, c, debug=False):
         data = encode_cmd(v, w, c)
-        send_simple_package(data, self.socket, config.ADDRESS, config.CMD_PORT, debug=debug)
+        send_simple_package(data, self.socket, config.ADDRESS, config.CMD_SEND_PORT, debug=debug)
         
     def draw_box(self, lt_x, lt_y, width, height, message='', color='red', **kwargs):
         data = to_json(dtype='box',
@@ -71,6 +83,15 @@ class Informer():
         
     def cloc_sync(self):
         while True:
-            data, addr = self.receive_socket.recvfrom(65535)
+            data, addr = self.sync_rec_socket.recvfrom(65535)
             new_data = bytes(str(int(data)-1), 'utf-8')
             send_package(new_data, self.socket, config.ADDRESS, config.SYNC_SEND_PORT)
+            
+    def cmd_rec(self):
+        while True:
+            data,addr = self.cmd_rec_socket.recvfrom(65535)
+            json_data = json.loads(data.decode('utf-8'))
+            self.parse_cmd(json_data)
+            
+    def parse_cmd(self, cmd):
+        pass
