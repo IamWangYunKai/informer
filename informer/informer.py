@@ -39,9 +39,9 @@ class Informer():
         self.cloc_sync_thread.start()
         self.cmd_rec_thread.start()
     
-    def send_vision(self, img, isGrey=False, debug=False):
+    def send_vision(self, img, isGrey=False, timestamp=None, debug=False):
         data = encode_img(img, isGrey)
-        send_package(data, self.socket, config.ADDRESS, config.VISION_PORT, debug=debug)
+        send_package(data, self.socket, config.ADDRESS, config.VISION_PORT, debug=debug, timestamp=timestamp)
     
     def send_cmd(self, v, w, c, debug=False):
         data = encode_cmd(v, w, c)

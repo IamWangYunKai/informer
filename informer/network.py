@@ -13,9 +13,12 @@ def send_simple_package(data, socket, address, port, debug=False):
         print('Simple send', data)
     return ret
     
-def send_package(data, socket, address, port, debug=False):
-    timestamp = int(round(time.time()*1000*1000))
-    timestamp_head = bytes(str(timestamp), 'utf-8')
+def send_package(data, socket, address, port, timestamp=None, debug=False):
+    if timestamp is None:
+        _timestamp = int(round(time.time()*1000*1000))
+    else:
+        _timestamp = int(round(timestamp*1000*1000))
+    timestamp_head = bytes(str(_timestamp), 'utf-8')
         
     length = len(data)
     length_head = create_head(length)
