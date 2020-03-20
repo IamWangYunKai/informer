@@ -10,7 +10,7 @@ def encode_img(img, isGrey=False):
     data = jpeg.tobytes()
     return data
 
-def encode_cmd(v, w, c):
+def encode_sensor(v, w, c):
     data = {'v':v, 'w':w, 'c':c}
     data = json.dumps(data).encode()
     return data

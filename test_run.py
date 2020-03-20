@@ -5,8 +5,8 @@ import time
 import numpy as np
 from informer import Informer
 
-IM_WIDTH = 240*2
-IM_HEIGHT = 240
+IM_WIDTH = 360*2
+IM_HEIGHT = 360
 throttle = 0.0
 steer = 0.0
 reverse = False

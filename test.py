@@ -29,7 +29,7 @@ if __name__ == '__main__':
             # send image
             ifm.send_vision(image)
             # send robot command
-            ifm.send_cmd(v, w, c)
+            ifm.send_sensor_data(v, w, c)
             # send debug message
             ifm.draw()
         else:

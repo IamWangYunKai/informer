@@ -2,15 +2,16 @@
 
 MAX_LENGTH = 65535 - 16*4
 
-PUBLICT_ADDRESS = ('47.100.46.11', 3386)
+PUBLICT_IP = '47.100.46.11'
 
-ADDRESS = '233.233.233.233'
+PORT_DICT = {
+        'vision':10001,
+        'sensor':10002,
+        'cmd':10003,
+        'debug':10004,
+        'clock':10005,
+        }
 
-VISION_PORT = 23333
-CMD_SEND_PORT = 23334
-DEBUG_PORT = 23335
-SYNC_SEND_PORT = 23336
-SYNC_RECEIVE_PORT = 23337
-CMD_RECEIVE_PORT = 23338
+REGISTER_KEYS = list(PORT_DICT.keys())
 
 colors = ['black','white','darkGray','gray','lightGray','red','green','blue','cyan','magenta','yellow','darkRed','darkGreen','darkBlue','darkCyan','darkMagenta','darkYellow']
