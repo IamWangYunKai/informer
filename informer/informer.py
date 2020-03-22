@@ -112,3 +112,6 @@ class Informer():
             data,addr = self.socket_dict['cmd'].recvfrom(65535)
             json_data = json.loads(data.decode('utf-8'))
             self.parse_cmd(json_data)
+            
+    def parse_cmd(self, cmd):
+        pass

@@ -5,10 +5,6 @@ from informer import Informer, config
 
 if __name__ == '__main__':
     # user settings
-    config.ADDRESS = '233.233.233.233'
-    config.VISION_PORT = 23333
-    config.CMD_PORT = 23334
-    
     ifm = Informer()
     # get your data
     cam = cv2.VideoCapture(0)

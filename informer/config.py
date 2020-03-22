@@ -2,7 +2,7 @@
 
 MAX_LENGTH = 65535 - 16*4
 
-PUBLICT_IP = '47.100.46.11'
+PUBLICT_IP = '106.54.163.9'#'47.100.46.11'
 
 PORT_DICT = {
         'vision':10001,
