@@ -5,7 +5,7 @@ import time
 import numpy as np
 from informer import Informer
 
-greyModel = False
+greyModel = True
 IM_WIDTH = 240*2
 IM_HEIGHT = 240
 throttle = 0.0
@@ -106,7 +106,7 @@ try:
         v = get_norm(vehicle.get_velocity().x, vehicle.get_velocity().y, vehicle.get_velocity().z)
         c = reverse
         ifm.send_sensor_data(v, w, c)
-        #time.sleep(0.05)
+        time.sleep(0.05)
 
 finally:
     print('destroying actors')

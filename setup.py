@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='informer',
-    version='0.0.4',
+    version='0.0.5',
     author='Wang Yunkai',
     author_email='wangyunkai.zju@gmail.com',
     url='https://github.com/IamWangYunKai/informer',
