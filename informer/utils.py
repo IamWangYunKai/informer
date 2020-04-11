@@ -15,6 +15,11 @@ def encode_sensor(v, w, c):
     data = json.dumps(data).encode()
     return data
 
+def encode_message(data, robot_id, mtype='normal', pri=5):
+    data = {'Mtype':mtype, 'Pri':pri, 'Id':robot_id, 'Data':data}
+    data = json.dumps(data).encode()
+    return data
+
 def to_json(**kwargs):
     return json.dumps(kwargs)
     

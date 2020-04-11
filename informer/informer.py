@@ -4,11 +4,12 @@ import socket
 import threading
 from time import sleep
 from informer.network import send_package, send_simple_package
-from informer.utils import encode_img, encode_sensor, encode_debug_message, to_json
+from informer.utils import encode_img, encode_sensor, encode_debug_message, to_json, encode_message
 from informer import config
 
 class Informer():
-    def __init__(self):
+    def __init__(self, robot_id=None):
+        self.robot_id = str(robot_id)
         self.register_keys = config.REGISTER_KEYS
         self.port_dict = config.PORT_DICT
         self.socket_dict = {}
@@ -16,7 +17,11 @@ class Informer():
         self.connect_state = {}
         for key in self.register_keys:
             self.socket_dict[key] = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-            self.data_dict[key] = ('server:'+key).encode("utf-8")
+            if self.robot_id == None:
+                self.data_dict[key] = ('server:'+key).encode("utf-8")
+            else:
+                data = {'Mtype':'register', 'Pri':5, 'Id':self.robot_id, 'Data':'message'}
+                self.data_dict[key] = json.dumps(data).encode()
             self.socket_dict[key].sendto(self.data_dict[key], (config.PUBLICT_IP, self.port_dict[key]))
             
         for key in self.register_keys:
@@ -30,21 +35,27 @@ class Informer():
             sleep(0.001)
         print('start to work...')
         
-        self.cloc_sync_thread = threading.Thread(
-            target=self.cloc_sync, args=()
-        )
-        
-        self.cmd_recv_thread = threading.Thread(
-            target=self.cmd_recv, args=()
-        )
-        
+        if 'clock' in self.register_keys:
+            self.cloc_sync_thread = threading.Thread(
+                target=self.cloc_sync, args=()
+            )
+            self.cloc_sync_thread.start()
+            
+        if 'cmd' in self.register_keys:
+            self.cmd_recv_thread = threading.Thread(
+                target=self.cmd_recv, args=()
+            )
+            self.cmd_recv_thread.start()
+  
+        if 'message' in self.register_keys:
+            self.message_recv_thread = threading.Thread(
+                target=self.message_recv, args=()
+            )
+            self.message_recv_thread.start()
+
         # debug info
         self.cnt = 0
-        self.message_dick = {}
-        
-        # automaticly start cloc synchronization thread
-        self.cloc_sync_thread.start()
-        self.cmd_recv_thread.start()
+        self.debug_dict = {}
         
     def connect(self, key, sock):
         data = ''
@@ -72,7 +83,7 @@ class Informer():
                        lt_x=lt_x, lt_y=lt_y, width=width, height=height,
                        message=message,
                        color=color)
-        self.message_dick[str(self.cnt)] = data
+        self.debug_dict[str(self.cnt)] = data
         self.cnt += 1
         
     def draw_center_box(self, ct_x, ct_y, width, height, message='', color='red'):
@@ -80,24 +91,24 @@ class Informer():
                        ct_x=ct_x, ct_y=ct_y, width=width, height=height,
                        message=message,
                        color=color)
-        self.message_dick[str(self.cnt)] = data
+        self.debug_dict[str(self.cnt)] = data
         self.cnt += 1
         
     def draw_line(self, s_x, s_y, e_x, e_y, color='red'):
         data = to_json(dtype='line',
                        s_x=s_x, s_y=s_y, e_x=e_x, e_y=e_y,
                        color=color)
-        self.message_dick[str(self.cnt)] = data
+        self.debug_dict[str(self.cnt)] = data
         self.cnt += 1
         
     def clear(self):
         data = to_json(dtype='clear')
-        self.message_dick[str(self.cnt)] = data
+        self.debug_dict[str(self.cnt)] = data
         self.cnt += 1
         
     def draw(self):
-        data = encode_debug_message(self.message_dick)
-        self.message_dick = {}
+        data = encode_debug_message(self.debug_dict)
+        self.debug_dict = {}
         self.cnt = 0
         send_simple_package(data, self.socket_dict['debug'], config.PUBLICT_IP, self.port_dict['debug'])
         
@@ -115,3 +126,20 @@ class Informer():
             
     def parse_cmd(self, cmd):
         pass
+    
+    def send_message(self, data, mtype='normal', pri=5, debug=False):
+        data = encode_message(data, self.robot_id, mtype, pri)
+        send_simple_package(data, self.socket_dict['message'], config.PUBLICT_IP, self.port_dict['message'], debug=debug)
+        
+    def message_recv(self):
+        while True:
+            data,addr = self.socket_dict['message'].recvfrom(65535)
+            json_data = json.loads(data.decode('utf-8'))
+            self.parse_message(json_data)
+            
+    def parse_message(self, message):
+        message_type = message['Mtype']
+        pri = message['Pri']
+        robot_id = message['Id']
+        data = message['Data']
+        #print(message_type, pri, robot_id, data)
