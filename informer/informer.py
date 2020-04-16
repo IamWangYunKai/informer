@@ -4,12 +4,13 @@ import socket
 import threading
 from time import sleep
 from informer.network import send_package, send_simple_package
-from informer.utils import encode_img, encode_sensor, encode_debug_message, to_json, encode_message
+import informer.utils as utils
 from informer import config
 
 class Informer():
-    def __init__(self, robot_id=None):
+    def __init__(self, robot_id=None, block=True):
         self.robot_id = str(robot_id)
+        self.block = block
         self.register_keys = config.REGISTER_KEYS
         self.port_dict = config.PORT_DICT
         self.socket_dict = {}
@@ -31,8 +32,9 @@ class Informer():
             recv_thread.start()
             
         # wait for sending packages
-        while set(self.register_keys) != set(self.connect_state.keys()):
-            sleep(0.001)
+        if self.block:
+            while set(self.register_keys) != set(self.connect_state.keys()):
+                sleep(0.001)
         print('start to work...')
         
         if 'clock' in self.register_keys:
@@ -71,15 +73,15 @@ class Informer():
             print('Error when connect', key, '.\tGet', data)
     
     def send_vision(self, img, isGrey=False, timestamp=None, debug=False):
-        data = encode_img(img, isGrey)
+        data = utils.encode_img(img, isGrey)
         send_package(data, self.socket_dict['vision'], config.PUBLICT_IP, self.port_dict['vision'], debug=debug, timestamp=timestamp)
     
     def send_sensor_data(self, v, w, c, debug=False):
-        data = encode_sensor(v, w, c)
+        data = utils.encode_sensor(v, w, c)
         send_simple_package(data, self.socket_dict['sensor'], config.PUBLICT_IP, self.port_dict['sensor'], debug=debug)
         
     def draw_box(self, lt_x, lt_y, width, height, message='', color='red', **kwargs):
-        data = to_json(dtype='box',
+        data = utils.to_json(dtype='box',
                        lt_x=lt_x, lt_y=lt_y, width=width, height=height,
                        message=message,
                        color=color)
@@ -87,7 +89,7 @@ class Informer():
         self.cnt += 1
         
     def draw_center_box(self, ct_x, ct_y, width, height, message='', color='red'):
-        data = to_json(dtype='center_box',
+        data = utils.to_json(dtype='center_box',
                        ct_x=ct_x, ct_y=ct_y, width=width, height=height,
                        message=message,
                        color=color)
@@ -95,19 +97,19 @@ class Informer():
         self.cnt += 1
         
     def draw_line(self, s_x, s_y, e_x, e_y, color='red'):
-        data = to_json(dtype='line',
+        data = utils.to_json(dtype='line',
                        s_x=s_x, s_y=s_y, e_x=e_x, e_y=e_y,
                        color=color)
         self.debug_dict[str(self.cnt)] = data
         self.cnt += 1
         
     def clear(self):
-        data = to_json(dtype='clear')
+        data = utils.to_json(dtype='clear')
         self.debug_dict[str(self.cnt)] = data
         self.cnt += 1
         
     def draw(self):
-        data = encode_debug_message(self.debug_dict)
+        data = utils.encode_debug_message(self.debug_dict)
         self.debug_dict = {}
         self.cnt = 0
         send_simple_package(data, self.socket_dict['debug'], config.PUBLICT_IP, self.port_dict['debug'])
@@ -128,7 +130,7 @@ class Informer():
         pass
     
     def send_message(self, data, mtype='normal', pri=5, debug=False):
-        data = encode_message(data, self.robot_id, mtype, pri)
+        data = utils.encode_message(data, self.robot_id, mtype, pri)
         send_simple_package(data, self.socket_dict['message'], config.PUBLICT_IP, self.port_dict['message'], debug=debug)
         
     def message_recv(self):

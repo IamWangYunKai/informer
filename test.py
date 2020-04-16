@@ -5,7 +5,7 @@ from informer import Informer, config
 
 if __name__ == '__main__':
     # user settings
-    ifm = Informer()
+    ifm = Informer(block=False)
     # get your data
     cam = cv2.VideoCapture(0)
     cam.set(3,1920)
