@@ -11,6 +11,7 @@ PORT_DICT = {
         #'debug':10004,
         #'clock':10005,
         'message':10006,
+        'sim':10007,
         }
 
 REGISTER_KEYS = list(PORT_DICT.keys())

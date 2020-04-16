@@ -4,8 +4,6 @@ import random
 
 if __name__ == '__main__':
     ifm = Informer(random.randint(100000,999999), block=False)
-    """
     while True:
-        ifm.send_message('1')
+        ifm.send_sim(1.0, 0.5)
         sleep(0.01)
-    """

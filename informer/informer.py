@@ -54,6 +54,12 @@ class Informer():
                 target=self.message_recv, args=()
             )
             self.message_recv_thread.start()
+            
+        if 'sim' in self.register_keys:
+            self.sim_recv_thread = threading.Thread(
+                target=self.sim_recv, args=()
+            )
+            self.sim_recv_thread.start()
 
         # debug info
         self.cnt = 0
@@ -62,7 +68,7 @@ class Informer():
     def connect(self, key, sock):
         data = ''
         while len(data) < 1:
-        	data, address = sock.recvfrom(1024)
+        	data, address = sock.recvfrom(65535)
         data = str(data, encoding = "utf-8")
         try:
             ip = data.split(':')[0]
@@ -133,6 +139,11 @@ class Informer():
         data = utils.encode_message(data, self.robot_id, mtype, pri)
         send_simple_package(data, self.socket_dict['message'], config.PUBLICT_IP, self.port_dict['message'], debug=debug)
         
+    def send_sim(self, v, w):
+        data = {"v":v, "w":w}
+        data = utils.encode_message(data, self.robot_id, mtype='cmd', pri=5)
+        send_simple_package(data, self.socket_dict['sim'], config.PUBLICT_IP, self.port_dict['sim'])
+        
     def message_recv(self):
         while True:
             data,addr = self.socket_dict['message'].recvfrom(65535)
@@ -140,6 +151,19 @@ class Informer():
             self.parse_message(json_data)
             
     def parse_message(self, message):
+        message_type = message['Mtype']
+        pri = message['Pri']
+        robot_id = message['Id']
+        data = message['Data']
+        #print(message_type, pri, robot_id, data)
+        
+    def sim_recv(self):
+        while True:
+            data,addr = self.socket_dict['sim'].recvfrom(65535)
+            json_data = json.loads(data.decode('utf-8'))
+            self.parse_sim(json_data)
+            
+    def parse_sim(self, message):
         message_type = message['Mtype']
         pri = message['Pri']
         robot_id = message['Id']
