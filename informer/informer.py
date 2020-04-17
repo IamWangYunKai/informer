@@ -64,6 +64,7 @@ class Informer():
         # debug info
         self.cnt = 0
         self.debug_dict = {}
+        self.sim_info = None
         
     def connect(self, key, sock):
         data = ''
@@ -164,8 +165,12 @@ class Informer():
             self.parse_sim(json_data)
             
     def parse_sim(self, message):
-        message_type = message['Mtype']
-        pri = message['Pri']
-        robot_id = message['Id']
+        #message_type = message['Mtype']
+        #pri = message['Pri']
+        #robot_id = message['Id']
         data = message['Data']
-        #print(message_type, pri, robot_id, data)
+        self.sim_info = data
+        
+    def get_sim_info(self):
+        return self.sim_info
+        
