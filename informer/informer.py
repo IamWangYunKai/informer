@@ -145,6 +145,11 @@ class Informer():
         data = utils.encode_message(data, self.robot_id, mtype='cmd', pri=5)
         send_simple_package(data, self.socket_dict['sim'], config.PUBLICT_IP, self.port_dict['sim'])
         
+    def send_sim_goal(self, x, y):
+        data = {"x":x, "y":y}
+        data = utils.encode_message(data, self.robot_id, mtype='goal', pri=5)
+        send_simple_package(data, self.socket_dict['sim'], config.PUBLICT_IP, self.port_dict['sim'])
+        
     def message_recv(self):
         while True:
             data,addr = self.socket_dict['message'].recvfrom(65535)
