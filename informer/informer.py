@@ -72,8 +72,9 @@ class Informer():
         	data, address = sock.recvfrom(65535)
         data = str(data, encoding = "utf-8")
         try:
-            ip = data.split(':')[0]
-            port = int(data.split(':')[1])
+            json_data = json.loads(data)
+            ip = json_data['Data'].split(':')[0]
+            port = int(json_data['Data'].split(':')[1])
             print('Get IP/port', ip, ':', port, 'as', key)
             self.connect_state[key] = True
         except:
