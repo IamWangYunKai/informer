@@ -13,53 +13,47 @@ class Informer():
         self.block = block
         self.register_keys = config.REGISTER_KEYS
         self.port_dict = config.PORT_DICT
+        self.recv_keys = config.RECV_KEYS
         self.socket_dict = {}
         self.data_dict = {}
         self.connect_state = {}
+        # register IP and port
         for key in self.register_keys:
             self.socket_dict[key] = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             if self.robot_id == None:
                 self.data_dict[key] = ('server:'+key).encode("utf-8")
             else:
-                data = {'Mtype':'register', 'Pri':5, 'Id':self.robot_id, 'Data':'message'}
-                self.data_dict[key] = json.dumps(data).encode()
+                self.data_dict[key] = utils.encode_message(
+                        data='message',
+                        robot_id=self.robot_id,
+                        mtype='register',
+                        pri=5)
             self.socket_dict[key].sendto(self.data_dict[key], (config.PUBLICT_IP, self.port_dict[key]))
-            
+        # temp threads to receive start packages
         for key in self.register_keys:
             recv_thread = threading.Thread(
                     target=self.connect, args=(key, self.socket_dict[key])
                     )
             recv_thread.start()
             
-        # wait for sending packages
+        # wait for connecting
         if self.block:
             while set(self.register_keys) != set(self.connect_state.keys()):
                 sleep(0.001)
         print('start to work...')
-        
-        if 'clock' in self.register_keys:
-            self.cloc_sync_thread = threading.Thread(
-                target=self.cloc_sync, args=()
-            )
-            self.cloc_sync_thread.start()
             
-        if 'cmd' in self.register_keys:
-            self.cmd_recv_thread = threading.Thread(
-                target=self.cmd_recv, args=()
-            )
-            self.cmd_recv_thread.start()
-  
-        if 'message' in self.register_keys:
-            self.message_recv_thread = threading.Thread(
-                target=self.message_recv, args=()
-            )
-            self.message_recv_thread.start()
-            
-        if 'sim' in self.register_keys:
-            self.sim_recv_thread = threading.Thread(
-                target=self.sim_recv, args=()
-            )
-            self.sim_recv_thread.start()
+        # start receive threads
+        for key in self.recv_keys:
+            if key in self.register_keys:
+                try:
+                    receive_func = getattr(self.__class__, key+'_recv')
+                except AttributeError:
+                    print(self.__class__.__name__, 'has no attribute called', key+'_recv')
+                    continue
+                recv_thread = threading.Thread(
+                        target = receive_func, args=(self,)
+                )
+                recv_thread.start()
 
         # debug info
         self.cnt = 0
@@ -122,21 +116,6 @@ class Informer():
         self.cnt = 0
         send_simple_package(data, self.socket_dict['debug'], config.PUBLICT_IP, self.port_dict['debug'])
         
-    def cloc_sync(self):
-        while True:
-            data, addr = self.socket_dict['clock'].recvfrom(65535)
-            new_data = bytes(str(int(data)-1), 'utf-8')
-            send_package(new_data, self.socket_dict['clock'], config.PUBLICT_IP, self.port_dict['clock'])
-            
-    def cmd_recv(self):
-        while True:
-            data,addr = self.socket_dict['cmd'].recvfrom(65535)
-            json_data = json.loads(data.decode('utf-8'))
-            self.parse_cmd(json_data)
-            
-    def parse_cmd(self, cmd):
-        pass
-    
     def send_message(self, data, mtype='normal', pri=5, debug=False):
         data = utils.encode_message(data, self.robot_id, mtype, pri)
         send_simple_package(data, self.socket_dict['message'], config.PUBLICT_IP, self.port_dict['message'], debug=debug)
@@ -150,6 +129,21 @@ class Informer():
         data = {"x":x, "y":y}
         data = utils.encode_message(data, self.robot_id, mtype='goal', pri=5)
         send_simple_package(data, self.socket_dict['sim'], config.PUBLICT_IP, self.port_dict['sim'])
+        
+    def clock_recv(self):
+        while True:
+            data, addr = self.socket_dict['clock'].recvfrom(65535)
+            new_data = bytes(str(int(data)-1), 'utf-8')
+            send_package(new_data, self.socket_dict['clock'], config.PUBLICT_IP, self.port_dict['clock'])
+            
+    def cmd_recv(self):
+        while True:
+            data,addr = self.socket_dict['cmd'].recvfrom(65535)
+            json_data = json.loads(data.decode('utf-8'))
+            self.parse_cmd(json_data)
+            
+    def parse_cmd(self, cmd):
+        pass
         
     def message_recv(self):
         while True:
