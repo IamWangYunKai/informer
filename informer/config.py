@@ -11,7 +11,7 @@ PORT_DICT = {
         'debug':10004,
         'clock':10005,
         'message':10006,
-        'sim':10007,
+        #'sim':10007,
         }
 
 RECV_KEYS = ['cmd', 'message', 'sim', 'clock']

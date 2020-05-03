@@ -5,7 +5,7 @@ from informer import Informer, config
 
 if __name__ == '__main__':
     # user settings
-    ifm = Informer(block=False)
+    ifm = Informer(random.randint(100000,999999), block=False)
     # get your data
     cam = cv2.VideoCapture(0)
     cam.set(3,1920)
@@ -23,7 +23,7 @@ if __name__ == '__main__':
                 ifm.draw_center_box(random.randint(100, 1100), random.randint(100, 1100), random.randint(10, 400), random.randint(10, 400), random.sample(config.colors, 1)[0], random.sample(config.colors, 1)[0])
             
             # send image
-            ifm.send_vision(image)
+            ifm.send_vision(image, True)
             # send robot command
             ifm.send_sensor_data(v, w, c)
             # send debug message

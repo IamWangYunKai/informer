@@ -9,7 +9,7 @@ from informer import config
 
 class Informer():
     def __init__(self, robot_id=None, block=True):
-        self.robot_id = str(robot_id)
+        self.robot_id = str(robot_id) if robot_id != None else None
         self.block = block
         self.register_keys = config.REGISTER_KEYS
         self.port_dict = config.PORT_DICT
@@ -24,8 +24,8 @@ class Informer():
                 self.data_dict[key] = ('server:'+key).encode("utf-8")
             else:
                 self.data_dict[key] = utils.encode_message(
-                        data='message',
-                        robot_id=self.robot_id,
+                        data='server:'+key,
+                        robot_id = self.robot_id,
                         mtype='register',
                         pri=5)
             self.socket_dict[key].sendto(self.data_dict[key], (config.PUBLICT_IP, self.port_dict[key]))
@@ -51,7 +51,7 @@ class Informer():
                     print(self.__class__.__name__, 'has no attribute called', key+'_recv')
                     continue
                 recv_thread = threading.Thread(
-                        target = receive_func, args=(self,)
+                    target = receive_func, args=(self,)
                 )
                 recv_thread.start()
 
