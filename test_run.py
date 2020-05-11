@@ -2,12 +2,13 @@ import math
 import carla
 import random
 import time
+import json
 import numpy as np
 from informer import Informer
 
-greyModel = True
-IM_WIDTH = 240*2
-IM_HEIGHT = 240
+greyModel = False
+IM_WIDTH = 320*2
+IM_HEIGHT = 320
 throttle = 0.0
 steer = 0.0
 reverse = False
@@ -18,21 +19,22 @@ gear = 1
 class Controller(Informer):
     def parse_cmd(self, cmd):
         global throttle, steer, reverse, brake, hand_brake, gear
-        steer = 0.75*cmd['w']
-        brake = cmd['b']
-        gear = int(cmd['g'])
-        hand_brake = bool(cmd['h'])
-        if cmd['v'] >= 0:
-            throttle = 0.7*cmd['v']
+        command = json.loads(cmd['Data'])
+        steer = 0.75*command['w']
+        brake = command['b']
+        gear = int(command['g'])
+        hand_brake = bool(command['h'])
+        if command['v'] >= 0:
+            throttle = 0.7*command['v']
             reverse = False
         else:
-            throttle = - 0.7*cmd['v']
+            throttle = - 0.7*command['v']
             reverse = True
             if gear == 0:
                 throttle = 0.0
             gear = 0 #CARLA feature
     
-ifm = Controller()
+ifm = Controller(random.randint(100000,999999), block=False)
 
 def process_img(image):
     global ifm
@@ -55,17 +57,15 @@ try:
     client.set_timeout(2.0)
 
     world = client.get_world()
-
     blueprint_library = world.get_blueprint_library()
-    bp = blueprint_library.filter('Tesla')[0]
+    bp = blueprint_library.filter("model3")[0]
 
     spawn_point = random.choice(world.get_map().get_spawn_points())
 
     vehicle = world.spawn_actor(bp, spawn_point)
-    vehicle.set_autopilot(True)  # if you just wanted some NPCs to drive.
+    #vehicle.set_autopilot(True)  # if you just wanted some NPCs to drive.
 
     actor_list.append(vehicle)
-
     blueprint = blueprint_library.find('sensor.camera.rgb')
     # change the dimensions of the image
     blueprint.set_attribute('image_size_x', f'{IM_WIDTH}')
@@ -81,7 +81,6 @@ try:
     actor_list.append(sensor)
     # do something with this sensor
     sensor.listen(lambda data: process_img(data))
-    
     weather = carla.WeatherParameters(
                 cloudyness=random.randint(0,80),#0-100
                 precipitation=0,#random.randint(0,20),#0-100
