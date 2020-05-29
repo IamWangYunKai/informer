@@ -39,3 +39,21 @@ def send_package(data, socket, address, port, timestamp=None, debug=False):
             print('Send', str(len(send_data)), 'Bytes, ', str(send_id+1), '/', str(math.ceil(length/MAX_LENGTH)))
         send_id += 1
         package_remain -= 1
+        
+def send_tcp_package(data, socket, address, port, timestamp=None, debug=False):
+    if timestamp is None:
+        _timestamp = int(round(time.time()*1000*1000))
+    else:
+        _timestamp = int(round(timestamp*1000*1000))
+
+    timestamp_head = str(_timestamp)
+    # @1
+    head = create_head(len(data)) + timestamp_head
+    socket.send(head.encode())
+    ra = socket.recv(5)
+    print(ra)
+    
+    # @2
+    socket.sendall(data)
+    ra = socket.recv(5)
+    print(ra)

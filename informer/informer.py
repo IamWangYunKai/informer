@@ -3,7 +3,7 @@ import json
 import socket
 import threading
 from time import sleep
-from informer.network import send_package, send_simple_package
+from informer.network import send_package, send_simple_package, send_tcp_package
 import informer.utils as utils
 from informer import config
 
@@ -19,6 +19,7 @@ class Informer():
         self.connect_state = {}
         # register IP and port
         for key in self.register_keys:
+            if key == 'vision': continue
             self.socket_dict[key] = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             if self.robot_id == None:
                 self.data_dict[key] = ('server:'+key).encode("utf-8")
@@ -31,10 +32,36 @@ class Informer():
             self.socket_dict[key].sendto(self.data_dict[key], (config.PUBLICT_IP, self.port_dict[key]))
         # temp threads to receive start packages
         for key in self.register_keys:
+            if key == 'vision': continue
             recv_thread = threading.Thread(
                     target=self.connect, args=(key, self.socket_dict[key])
                     )
             recv_thread.start()
+            
+        if 'vision' in self.register_keys:
+            self.vision_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.vision_socket.connect((config.PUBLICT_IP, self.port_dict['vision']))
+            #self.vision_socket.listen(5)
+            #self.socket_dict['vision'], addr = self.vision_socket.accept()
+            self.socket_dict['vision'] = self.vision_socket
+            self.data_dict['vision'] = utils.encode_message(
+                        data='server:vision',
+                        robot_id = self.robot_id,
+                        mtype='register',
+                        pri=5)
+            self.vision_socket.send(self.data_dict['vision'])
+            
+            data = self.vision_socket.recv(1024)
+            data = str(data, encoding = "utf-8")
+            try:
+                json_data = json.loads(data)
+                ip = json_data['Data'].split(':')[0]
+                port = int(json_data['Data'].split(':')[1])
+                print('Get IP/port', ip, ':', port, 'as vision')
+                self.connect_state['vision'] = True
+            except:
+                print('Error when connect vision.\tGet', data)
+            
             
         # wait for connecting
         if self.block:
@@ -73,11 +100,15 @@ class Informer():
             self.connect_state[key] = True
         except:
             print('Error when connect', key, '.\tGet', data)
-    
+    """
     def send_vision(self, img, isGrey=False, timestamp=None, debug=False):
         data = utils.encode_img(img, isGrey)
         send_package(data, self.socket_dict['vision'], config.PUBLICT_IP, self.port_dict['vision'], debug=debug, timestamp=timestamp)
-    
+    """
+    def send_vision(self, img, isGrey=False, timestamp=None, debug=False):
+        data = utils.encode_img(img, isGrey)
+        send_tcp_package(data, self.socket_dict['vision'], config.PUBLICT_IP, self.port_dict['vision'], debug=debug, timestamp=timestamp)
+        
     def send_sensor_data(self, v, w, c, debug=False):
         data = utils.encode_sensor(v, w, c)
         send_simple_package(data, self.socket_dict['sensor'], config.PUBLICT_IP, self.port_dict['sensor'], debug=debug)
