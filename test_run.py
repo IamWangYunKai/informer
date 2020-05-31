@@ -4,11 +4,12 @@ import random
 import time
 import json
 import numpy as np
-from informer import Informer
+from informer import Informer, config
+config.PUBLICT_IP = '127.0.0.1'
 
 greyModel = False
-IM_WIDTH = 320*2
-IM_HEIGHT = 320
+IM_WIDTH = 360*2
+IM_HEIGHT = 360
 throttle = 0.0
 steer = 0.0
 reverse = False
@@ -41,6 +42,7 @@ def process_img(image):
     timestamp = time.time()
     array = np.array(image.raw_data).reshape((image.height, image.width, 4))[:, :, :3]
     ifm.send_vision(array, isGrey=greyModel, timestamp=timestamp)
+    print('Send')
 
 def get_norm(*args):
     _sum = 0

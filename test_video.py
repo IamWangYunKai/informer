@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import cv2
 import random
 import numpy as np
 from time import sleep
@@ -8,10 +9,12 @@ if __name__ == '__main__':
     # user settings
     ifm = Informer(random.randint(100000,999999), block=False)
     # get your data
-
-    while True:
+    cap = cv2.VideoCapture('video.mp4')
+    while(cap.isOpened()):
         # get image
-        image = np.zeros([1280, 720, 3], np.uint8)
+        ret, image = cap.read()
+        image = cv2.resize(image, (640, 360), interpolation = cv2.INTER_AREA)
+        #image = np.zeros([1280, 720, 3], np.uint8)
         # get robot command
         v = random.random()*5
         w = random.random()*10 - 5
@@ -24,7 +27,7 @@ if __name__ == '__main__':
         # send image
         ifm.send_vision(image, False)
         # send robot command
-        ifm.send_sensor_data(v, w, c, True)
+        ifm.send_sensor_data(v, w, c)
         # send debug message
         ifm.draw()
         #sleep(1/100.)

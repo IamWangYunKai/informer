@@ -51,9 +51,7 @@ def send_tcp_package(data, socket, address, port, timestamp=None, debug=False):
     head = create_head(len(data)) + timestamp_head
     socket.send(head.encode())
     ra = socket.recv(5)
-    print(ra)
     
     # @2
     socket.sendall(data)
     ra = socket.recv(5)
-    print(ra)
